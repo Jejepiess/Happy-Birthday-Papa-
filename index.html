@@ -1,171 +1,139 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Happy Birthday Pa!</title>
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      background: #a8d0e6; /* creamy blue */
-    }
-    canvas {
-      display: block;
-      position: absolute;
-      top: 0;
-      left: 0;
-    }
-    #message {
-      position: absolute;
-      width: 100%;
-      text-align: center;
-      top: 40%;
-      font-size: 3em;
-      font-family: sans-serif;
-      color: white;
-      text-shadow: 2px 2px 4px #000;
-      opacity: 0;
-      transition: opacity 2s;
-    }
-    .balloon {
-      position: absolute;
-      width: 50px;
-      height: 70px;
-      border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
-      background: red;
-      animation: float 5s linear forwards;
-    }
-    @keyframes float {
-      to { transform: translateY(-110vh); opacity: 0; }
-    }
-  </style>
+<meta charset="UTF-8" />
+<title>Happy Birthday Pa!</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #a8d0e6;
+  }
+  canvas {
+    display: block;
+  }
+</style>
 </head>
 <body>
-  <canvas id="canvas"></canvas>
-  <div id="message">Happy Birthday Pa!</div>
+<canvas id="canvas"></canvas>
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-  <script>
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-    let W = window.innerWidth;
-    let H = window.innerHeight;
-    canvas.width = W;
-    canvas.height = H;
+window.addEventListener('resize', () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+});
 
-    window.addEventListener('resize', function() {
-      W = window.innerWidth;
-      H = window.innerHeight;
-      canvas.width = W;
-      canvas.height = H;
-    });
+const W = canvas.width;
+const H = canvas.height;
+let particles = [];
 
-    // Firework particle
-    class Particle {
-      constructor(x, y, color, vy) {
-        this.x = x;
-        this.y = y;
-        this.color = color;
-        this.vy = vy;
-        this.alpha = 1;
-      }
-      update() {
-        this.y += this.vy;
-        this.alpha -= 0.01;
-      }
-      draw() {
-        ctx.globalAlpha = this.alpha;
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-      }
-    }
+function createTextParticles() {
+  const offscreen = document.createElement('canvas');
+  const octx = offscreen.getContext('2d');
+  offscreen.width = W;
+  offscreen.height = H;
 
-    let particles = [];
-    let textFormed = false;
-    let confettiDone = false;
+  octx.fillStyle = 'white';
+  octx.font = 'bold 80px sans-serif';
+  octx.textAlign = 'center';
+  octx.fillText('Happy Birthday Pa!', W / 2, H / 2);
 
-    function fireworkSequence() {
-      if (!textFormed) {
-        if (particles.length < 200) {
-          let x = Math.random() * W;
-          let color = `hsl(${Math.random() * 360},100%,50%)`;
-          particles.push(new Particle(x, H, color, -Math.random() * 5 - 3));
-        }
-      }
+  const imgData = octx.getImageData(0, 0, W, H);
 
-      ctx.clearRect(0, 0, W, H);
-
-      particles.forEach((p, index) => {
-        p.update();
-        p.draw();
-        if (p.alpha <= 0) {
-          particles.splice(index, 1);
-        }
-      });
-
-      if (!textFormed && particles.length === 0) {
-        document.getElementById('message').style.opacity = 1;
-        textFormed = true;
-        setTimeout(confettiExplosion, 1500);
-      }
-
-      requestAnimationFrame(fireworkSequence);
-    }
-
-    fireworkSequence();
-
-    function confettiExplosion() {
-      const confetti = [];
-      for (let i = 0; i < 300; i++) {
-        confetti.push({
-          x: W / 2,
-          y: H / 2,
+  for (let y = 0; y < H; y += 6) {
+    for (let x = 0; x < W; x += 6) {
+      const index = (x + y * W) * 4;
+      if (imgData.data[index + 3] > 128) {
+        particles.push({
+          x: Math.random() * W,
+          y: H + Math.random() * 100,
+          tx: x,
+          ty: y,
           vx: (Math.random() - 0.5) * 10,
-          vy: (Math.random() - 0.5) * 10,
-          color: `hsl(${Math.random() * 360}, 100%, 60%)`,
-          size: Math.random() * 5 + 2
-        });
-      }
-
-      function animateConfetti() {
-        ctx.clearRect(0, 0, W, H);
-        confetti.forEach(c => {
-          c.x += c.vx;
-          c.y += c.vy;
-          c.vy += 0.1; // gravity
-          ctx.fillStyle = c.color;
-          ctx.fillRect(c.x, c.y, c.size, c.size);
-        });
-
-        if (confetti.every(c => c.y > H)) {
-          if (!confettiDone) {
-            confettiDone = true;
-            launchBalloons();
-          }
-        } else {
-          requestAnimationFrame(animateConfetti);
-        }
-      }
-
-      animateConfetti();
-    }
-
-    function launchBalloons() {
-      for (let i = 0; i < 10; i++) {
-        const balloon = document.createElement('div');
-        balloon.className = 'balloon';
-        balloon.style.background = `hsl(${Math.random() * 360}, 80%, 60%)`;
-        balloon.style.left = `${Math.random() * (W - 50)}px`;
-        document.body.appendChild(balloon);
-
-        balloon.addEventListener('animationend', () => {
-          balloon.remove();
+          vy: -Math.random() * 10,
+          alpha: 1
         });
       }
     }
-  </script>
+  }
+}
+
+function animateParticles() {
+  ctx.clearRect(0, 0, W, H);
+  particles.forEach(p => {
+    p.x += (p.tx - p.x) * 0.05;
+    p.y += (p.ty - p.y) * 0.05;
+    ctx.fillStyle = `rgba(255,255,255,${p.alpha})`;
+    ctx.fillRect(p.x, p.y, 3, 3);
+  });
+  requestAnimationFrame(animateParticles);
+}
+
+function launch() {
+  createTextParticles();
+  animateParticles();
+  setTimeout(confettiExplosion, 3000);
+}
+
+function confettiExplosion() {
+  let confetti = [];
+  for (let i = 0; i < 300; i++) {
+    confetti.push({
+      x: W / 2,
+      y: H / 2,
+      vx: (Math.random() - 0.5) * 10,
+      vy: (Math.random() - 0.5) * 10,
+      color: `hsl(${Math.random() * 360}, 100%, 60%)`,
+      size: Math.random() * 4 + 2
+    });
+  }
+
+  function animateConfetti() {
+    ctx.clearRect(0, 0, W, H);
+    confetti.forEach(c => {
+      c.x += c.vx;
+      c.y += c.vy;
+      c.vy += 0.1;
+      ctx.fillStyle = c.color;
+      ctx.fillRect(c.x, c.y, c.size, c.size);
+    });
+    if (confetti.every(c => c.y > H)) {
+      launchBalloons();
+    } else {
+      requestAnimationFrame(animateConfetti);
+    }
+  }
+
+  animateConfetti();
+}
+
+function launchBalloons() {
+  for (let i = 0; i < 10; i++) {
+    const balloon = document.createElement('div');
+    balloon.style.position = 'absolute';
+    balloon.style.width = '40px';
+    balloon.style.height = '60px';
+    balloon.style.borderRadius = '50%';
+    balloon.style.background = `hsl(${Math.random() * 360}, 80%, 60%)`;
+    balloon.style.left = `${Math.random() * (W - 40)}px`;
+    balloon.style.bottom = '0px';
+    balloon.style.transition = 'transform 6s linear';
+    document.body.appendChild(balloon);
+    setTimeout(() => {
+      balloon.style.transform = `translateY(-${H}px)`;
+    }, 50);
+    setTimeout(() => {
+      balloon.remove();
+    }, 6000);
+  }
+}
+
+launch();
+</script>
 </body>
 </html>
