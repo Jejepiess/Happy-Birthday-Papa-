@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Happy Birthday Pa!</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #a8d0e6; /* creamy blue */
+    }
+    canvas {
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    #message {
+      position: absolute;
+      width: 100%;
+      text-align: center;
+      top: 40%;
+      font-size: 3em;
+      font-family: sans-serif;
+      color: white;
+      text-shadow: 2px 2px 4px #000;
+      opacity: 0;
+      transition: opacity 2s;
+    }
+    .balloon {
+      position: absolute;
+      width: 50px;
+      height: 70px;
+      border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+      background: red;
+      animation: float 5s linear forwards;
+    }
+    @keyframes float {
+      to { transform: translateY(-110vh); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <div id="message">Happy Birthday Pa!</div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let W = window.innerWidth;
+    let H = window.innerHeight;
+    canvas.width = W;
+    canvas.height = H;
+
+    window.addEventListener('resize', function() {
+      W = window.innerWidth;
+      H = window.innerHeight;
+      canvas.width = W;
+      canvas.height = H;
+    });
+
+    // Firework particle
+    class Particle {
+      constructor(x, y, color, vy) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.vy = vy;
+        this.alpha = 1;
+      }
+      update() {
+        this.y += this.vy;
+        this.alpha -= 0.01;
+      }
+      draw() {
+        ctx.globalAlpha = this.alpha;
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    let particles = [];
+    let textFormed = false;
+    let confettiDone = false;
+
+    function fireworkSequence() {
+      if (!textFormed) {
+        if (particles.length < 200) {
+          let x = Math.random() * W;
+          let color = `hsl(${Math.random() * 360},100%,50%)`;
+          particles.push(new Particle(x, H, color, -Math.random() * 5 - 3));
+        }
+      }
+
+      ctx.clearRect(0, 0, W, H);
+
+      particles.forEach((p, index) => {
+        p.update();
+        p.draw();
+        if (p.alpha <= 0) {
+          particles.splice(index, 1);
+        }
+      });
+
+      if (!textFormed && particles.length === 0) {
+        document.getElementById('message').style.opacity = 1;
+        textFormed = true;
+        setTimeout(confettiExplosion, 1500);
+      }
+
+      requestAnimationFrame(fireworkSequence);
+    }
+
+    fireworkSequence();
+
+    function confettiExplosion() {
+      const confetti = [];
+      for (let i = 0; i < 300; i++) {
+        confetti.push({
+          x: W / 2,
+          y: H / 2,
+          vx: (Math.random() - 0.5) * 10,
+          vy: (Math.random() - 0.5) * 10,
+          color: `hsl(${Math.random() * 360}, 100%, 60%)`,
+          size: Math.random() * 5 + 2
+        });
+      }
+
+      function animateConfetti() {
+        ctx.clearRect(0, 0, W, H);
+        confetti.forEach(c => {
+          c.x += c.vx;
+          c.y += c.vy;
+          c.vy += 0.1; // gravity
+          ctx.fillStyle = c.color;
+          ctx.fillRect(c.x, c.y, c.size, c.size);
+        });
+
+        if (confetti.every(c => c.y > H)) {
+          if (!confettiDone) {
+            confettiDone = true;
+            launchBalloons();
+          }
+        } else {
+          requestAnimationFrame(animateConfetti);
+        }
+      }
+
+      animateConfetti();
+    }
+
+    function launchBalloons() {
+      for (let i = 0; i < 10; i++) {
+        const balloon = document.createElement('div');
+        balloon.className = 'balloon';
+        balloon.style.background = `hsl(${Math.random() * 360}, 80%, 60%)`;
+        balloon.style.left = `${Math.random() * (W - 50)}px`;
+        document.body.appendChild(balloon);
+
+        balloon.addEventListener('animationend', () => {
+          balloon.remove();
+        });
+      }
+    }
+  </script>
+</body>
+</html>
