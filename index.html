@@ -8,7 +8,7 @@
     margin: 0;
     padding: 0;
     overflow: hidden;
-    background: #a8d0e6;
+    background: #a8d0e6; /* creamy blue */
   }
   canvas {
     display: block;
@@ -23,11 +23,6 @@ const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-window.addEventListener('resize', () => {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-});
-
 const W = canvas.width;
 const H = canvas.height;
 let particles = [];
@@ -38,15 +33,15 @@ function createTextParticles() {
   offscreen.width = W;
   offscreen.height = H;
 
-  octx.fillStyle = 'white';
+  octx.fillStyle = 'red';
   octx.font = 'bold 80px sans-serif';
   octx.textAlign = 'center';
   octx.fillText('Happy Birthday Pa!', W / 2, H / 2);
 
   const imgData = octx.getImageData(0, 0, W, H);
 
-  for (let y = 0; y < H; y += 6) {
-    for (let x = 0; x < W; x += 6) {
+  for (let y = 0; y < H; y += 4) {
+    for (let x = 0; x < W; x += 4) {
       const index = (x + y * W) * 4;
       if (imgData.data[index + 3] > 128) {
         particles.push({
@@ -54,9 +49,6 @@ function createTextParticles() {
           y: H + Math.random() * 100,
           tx: x,
           ty: y,
-          vx: (Math.random() - 0.5) * 10,
-          vy: -Math.random() * 10,
-          alpha: 1
         });
       }
     }
@@ -68,16 +60,12 @@ function animateParticles() {
   particles.forEach(p => {
     p.x += (p.tx - p.x) * 0.05;
     p.y += (p.ty - p.y) * 0.05;
-    ctx.fillStyle = `rgba(255,255,255,${p.alpha})`;
+    ctx.fillStyle = 'red';
     ctx.fillRect(p.x, p.y, 3, 3);
   });
-  requestAnimationFrame(animateParticles);
-}
-
-function launch() {
-  createTextParticles();
-  animateParticles();
-  setTimeout(confettiExplosion, 3000);
+  requestAnimationFrame(() => {
+    animateParticles();
+  });
 }
 
 function confettiExplosion() {
@@ -133,7 +121,13 @@ function launchBalloons() {
   }
 }
 
-launch();
+function startShow() {
+  createTextParticles();
+  animateParticles();
+  setTimeout(confettiExplosion, 4000); // after text is formed
+}
+
+startShow();
 </script>
 </body>
 </html>
